@@ -16,13 +16,20 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Asynchronous database setup for better performance
-async_database_url = settings.database_url.replace("postgresql://", "postgresql+asyncpg://")
-async_engine = create_async_engine(
-    async_database_url,
-    pool_pre_ping=True,
-    pool_recycle=300,
-    echo=settings.debug
-)
+if settings.database_url.startswith("sqlite"):
+    async_database_url = settings.database_url.replace("sqlite:///", "sqlite+aiosqlite:///")
+    async_engine = create_async_engine(
+        async_database_url,
+        echo=settings.debug
+    )
+else:
+    async_database_url = settings.database_url.replace("postgresql://", "postgresql+asyncpg://")
+    async_engine = create_async_engine(
+        async_database_url,
+        pool_pre_ping=True,
+        pool_recycle=300,
+        echo=settings.debug
+    )
 
 AsyncSessionLocal = sessionmaker(
     async_engine, 
